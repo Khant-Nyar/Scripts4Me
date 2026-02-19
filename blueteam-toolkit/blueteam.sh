@@ -175,7 +175,7 @@ run_analysis() {
 
     echo '{"findings": [], "attacks": [], "stats": {}}' > "$results_file"
 
-    local findings=()
+    findings=()
 
     Logger::info "Running SQLi detection..."
     local sqli_results
@@ -304,13 +304,13 @@ main() {
     parse_arguments "$@"
     
     if [[ "$AUTO_SCAN" == "true" ]]; then
-        Banner::show
+        Banner::show || true
         AutoScanner::run
         exit 0
     fi
 
     if [[ "$QUIET_MODE" == "false" ]]; then
-        Banner::show
+        Banner::show || true
     fi
 
     namespace::initialize
