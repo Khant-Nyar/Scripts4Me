@@ -99,6 +99,59 @@ chmod +x blueteam.sh
 - Nginx Access Log Format
 - Custom formats (with modification)
 
+## Configuration
+
+The toolkit uses `config/default.conf` for customizable settings. Copy and modify this file as needed.
+
+### Detection Thresholds
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `THRESHOLD_BRUTE_FORCE` | Failed login attempts to trigger alert | 10 |
+| `THRESHOLD_SCANNER` | Requests per IP to flag as scanner | 50 |
+| `THRESHOLD_ENUMERATION` | Failed resource attempts to flag enumeration | 30 |
+| `THRESHOLD_SQLI` | SQL injection requests to trigger alert | 1 |
+| `THRESHOLD_RCE` | RCE attempts to trigger alert | 1 |
+| `THRESHOLD_XSS` | XSS attempts to trigger alert | 1 |
+| `THRESHOLD_PATH_TRAVERSAL` | Path traversal attempts to trigger alert | 1 |
+
+### Detector Settings
+
+| Parameter | Description | Values |
+|-----------|-------------|--------|
+| `MIN_SEVERITY` | Minimum severity level to report | CRITICAL, HIGH, MEDIUM, LOW, INFO |
+| `ENABLE_*` | Toggle individual detectors | true/false |
+
+### Pattern Matching
+
+| Parameter | Description | Example |
+|-----------|-------------|---------|
+| `WEBSHELL_PATTERNS` | Comma-separated webshell keywords | c99,r57,shell,b374k |
+| `SUSPICIOUS_USER_AGENTS` | Known attack tool User-Agents | sqlmap,nikto,nmap,masscan |
+
+### Output Options
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `OUTPUT_JSON` | Enable JSON output | false |
+| `OUTPUT_CSV` | Enable CSV output | false |
+| `VERBOSE` | Show detailed logs | false |
+| `QUIET` | Suppress banner | false |
+| `TOP_COUNT` | Number of top attackers to show | 20 |
+
+### Custom Configuration
+
+```bash
+# Create custom config
+cp config/default.conf config/custom.conf
+
+# Edit settings
+vim config/custom.conf
+
+# Use custom config
+./blueteam.sh -c config/custom.conf /var/log/nginx/access.log
+```
+
 ## Detection Patterns
 
 ### SQL Injection

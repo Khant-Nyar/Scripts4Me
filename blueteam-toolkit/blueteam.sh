@@ -13,8 +13,9 @@ TOP_COUNT=20
 LOG_FILE=""
 WORKSPACE=""
 CONFIG_FILE=""
+AUTO_SCAN=false
 
-export QUIET_MODE VERBOSE_MODE JSON_OUTPUT CSV_OUTPUT TOP_COUNT LOG_FILE WORKSPACE CONFIG_FILE
+export QUIET_MODE VERBOSE_MODE JSON_OUTPUT CSV_OUTPUT TOP_COUNT LOG_FILE WORKSPACE CONFIG_FILE AUTO_SCAN
 
 source "$(dirname "${BASH_SOURCE[0]}")/core/Colors.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/core/Logger.sh"
@@ -37,6 +38,8 @@ source "$(dirname "${BASH_SOURCE[0]}")/detectors/EnumerationDetector.sh"
 
 source "$(dirname "${BASH_SOURCE[0]}")/analyzers/IPProfiler.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/analyzers/TimelineAnalyzer.sh"
+
+source "$(dirname "${BASH_SOURCE[0]}")/auto_scan.sh"
 
 namespace::initialize() {
     core::load_config "$CONFIG_FILE"
@@ -76,6 +79,10 @@ parse_arguments() {
                 TOP_COUNT="${2:-20}"
                 shift 2
                 ;;
+            --auto|-a)
+                AUTO_SCAN=true
+                shift
+                ;;
             --config)
                 CONFIG_FILE="$2"
                 shift 2
@@ -105,20 +112,22 @@ parse_arguments() {
         esac
     done
 
-    if [[ -z "$LOG_FILE" ]]; then
-        Logger::error "No log file specified"
-        show_help
-        exit 1
-    fi
+    if [[ "$AUTO_SCAN" == "false" ]]; then
+        if [[ -z "$LOG_FILE" ]]; then
+            Logger::error "No log file specified"
+            show_help
+            exit 1
+        fi
 
-    if [[ ! -f "$LOG_FILE" ]]; then
-        Logger::error "Log file not found: $LOG_FILE"
-        exit 1
-    fi
+        if [[ ! -f "$LOG_FILE" ]]; then
+            Logger::error "Log file not found: $LOG_FILE"
+            exit 1
+        fi
 
-    if [[ ! -r "$LOG_FILE" ]]; then
-        Logger::error "Log file not readable: $LOG_FILE"
-        exit 1
+        if [[ ! -r "$LOG_FILE" ]]; then
+            Logger::error "Log file not readable: $LOG_FILE"
+            exit 1
+        fi
     fi
 }
 
@@ -128,6 +137,7 @@ $BLUE_TEAM_NAME v$BLUE_TEAM_VERSION
 
 USAGE:
     $(basename "$0") [OPTIONS] <log_file>
+    $(basename "$0") --auto
 
 OPTIONS:
     --json           Output results in JSON format
@@ -135,6 +145,7 @@ OPTIONS:
     --quiet, -q      Suppress banner and non-essential output
     --verbose, -v    Enable verbose output
     --top N          Show top N attackers (default: 20)
+    --auto, -a       Auto scan system (logs, processes, backdoors, shells)
     --config FILE    Use custom configuration file
     --help, -h       Show this help message
     --version        Show version information
@@ -143,6 +154,7 @@ EXAMPLES:
     $(basename "$0") /var/log/nginx/access.log
     $(basename "$0") --json --top 50 /var/log/apache2/access.log
     $(basename "$0") --csv -v /var/log/nginx/access.log
+    $(basename "$0") --auto
 
 EOF
 }
@@ -290,6 +302,12 @@ main() {
     trap cleanup EXIT
 
     parse_arguments "$@"
+    
+    if [[ "$AUTO_SCAN" == "true" ]]; then
+        Banner::show
+        AutoScanner::run
+        exit 0
+    fi
 
     if [[ "$QUIET_MODE" == "false" ]]; then
         Banner::show

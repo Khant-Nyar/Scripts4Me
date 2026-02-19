@@ -1,5 +1,10 @@
 #!/bin/bash
 
+ReportPrinter::get_separator() {
+    local width=${COLUMNS:-80}
+    printf '%*s' "$width" '' | tr ' ' '='
+}
+
 ReportPrinter::print_results() {
     local workspace="$1"
     local findings_json="$2"
@@ -58,7 +63,7 @@ ReportPrinter::print_text() {
         risk_level="MEDIUM"
     fi
     
-    local separator=$(printf '=%.0s' {1..60})
+    local separator=$(ReportPrinter::get_separator)
     
     echo ""
     echo "$separator"
